@@ -18,7 +18,12 @@ iris_df.to_csv(raw_data_path, index=False)
 print(f"Raw data saved to {raw_data_path}")
 
 # Split the data for training and testing
-train, test = train_test_split(iris_df, test_size=0.2, random_state=42, stratify=iris_df['target'])
+train, test = train_test_split(
+    iris_df,
+    test_size=0.2,
+    random_state=42,
+    stratify=iris_df['target']
+)
 
 # Save the processed data
 train_path = 'data/processed/train.csv'

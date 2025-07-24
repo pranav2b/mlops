@@ -1,32 +1,17 @@
+import logging
 import mlflow
-from mlflow.tracking import MlflowClient
 import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
-import logging
-
-mlflow.set_tracking_uri("file:./mlruns")
-# Configure logging to write to a file in a 'logs' directory
-# Create a 'logs' directory in your project root for this to work
-logging.basicConfig(
-    filename='logs/api.log',
-    level=logging.INFO,
-
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 
 
-
-# --- DEFINITIVE MODEL LOADING LOGIC ---
-# --- SIMPLIFIED MODEL LOADING LOGIC ---
+# --- START MODEL LOADING LOGIC ---
 try:
     model = mlflow.pyfunc.load_model("./outputs/model")
     logging.info("Model loaded successfully from fixed path.")
 except Exception as e:
     logging.error(f"Error loading model from fixed path: {e}")
     model = None
-# --- END OF SIMPLIFIED LOGIC ---
-
 # --- END OF MODEL LOADING LOGIC ---
 
 
@@ -37,15 +22,24 @@ class IrisFeatures(BaseModel):
     petal_length: float
     petal_width: float
 
+
+# Configure logging
+# Create a 'logs' directory in your project root for this to work
+logging.basicConfig(
+    filename='logs/api.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+
 # Initialize the FastAPI app
 app = FastAPI(
     title="Iris Species Predictor API",
-    description="An API to predict Iris flower species using a trained ML model.",
+    description="An API to predict Iris species using a trained ML model.",
     version="1.0"
 )
 
 
-# Define the prediction endpoint
 @app.post("/predict")
 def predict(features: IrisFeatures):
     """
@@ -61,7 +55,7 @@ def predict(features: IrisFeatures):
     """
     if model is None:
         logging.error("Model is not loaded; cannot make a prediction.")
-        return {"error": "Model is not available. Please check the server logs."}
+        return {"error": "Model not available. Please check server logs."}
 
     logging.info(f"Prediction request received: {features.dict()}")
 
@@ -70,10 +64,13 @@ def predict(features: IrisFeatures):
         input_df = pd.DataFrame([features.dict()])
 
         # Get the model's expected feature names from its saved schema
-        model_expected_features = model.metadata.get_input_schema().input_names()
+        expected_features = model.metadata.get_input_schema().input_names()
 
         # Rename the DataFrame columns to match what the model expects
-        input_df = input_df.rename(columns={old: new for old, new in zip(input_df.columns, model_expected_features)})
+        column_map = {
+            old: new for old, new in zip(input_df.columns, expected_features)
+        }
+        input_df = input_df.rename(columns=column_map)
 
         # Make a prediction
         prediction_index = model.predict(input_df)[0]
@@ -90,7 +87,6 @@ def predict(features: IrisFeatures):
         return {"error": "Failed to make a prediction due to a server error."}
 
 
-# Define a root endpoint for health checks
 @app.get("/")
 def read_root():
     """A simple health check endpoint."""

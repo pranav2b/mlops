@@ -2,8 +2,6 @@ import os
 import shutil
 import pandas as pd
 import mlflow
-from mlflow.tracking import MlflowClient
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -44,7 +42,10 @@ with mlflow.start_run(run_name='RandomForest'):
     mlflow.log_param("n_estimators", n_estimators)
     mlflow.log_param("max_depth", max_depth)
 
-    rf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=42)
+    rf = RandomForestClassifier(
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        random_state=42)
     rf.fit(X_train, y_train)
 
     y_pred = rf.predict(X_test)
@@ -62,7 +63,8 @@ best_run_id = best_run.run_id
 best_model_accuracy = best_run["metrics.accuracy"]
 best_model_uri = f"runs:/{best_run_id}/model"
 
-print(f"Best model found in run {best_run_id} with accuracy: {best_model_accuracy}")
+print(f"Best model found in run {best_run_id} with accuracy: "
+      f"{best_model_accuracy}")
 
 # Define a fixed output path
 output_path = "outputs/model"
