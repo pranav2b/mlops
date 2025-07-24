@@ -1,52 +1,3 @@
-# import mlflow
-# import pandas as pd
-# from fastapi import FastAPI
-# from pydantic import BaseModel
-#
-# # Define the input data schema using Pydantic
-# class IrisFeatures(BaseModel):
-#     sepal_length: float
-#     sepal_width: float
-#     petal_length: float
-#     petal_width: float
-#
-# # Initialize the FastAPI app
-# app = FastAPI(title="Iris Species Predictor API", version="1.0")
-#
-# # Load the production model from MLflow Model Registry
-# # URI format: "models:/<model_name>/<stage>"
-# # Set the tracking URI to the local mlruns directory inside the container
-# mlflow.set_tracking_uri("./mlruns")
-# model_uri = "models:/iris-classifier@prod"
-# model = mlflow.pyfunc.load_model(model_uri)
-# print("Model loaded successfully!")
-#
-# # Define the prediction endpoint
-# @app.post("/predict")
-# def predict(features: IrisFeatures):
-#     # ... (docstring) ...
-#
-#     # Convert input to a DataFrame
-#     input_df = pd.DataFrame([features.dict()])
-#
-#     # Get schema from the loaded model and rename columns
-#     model_expected_features = model.metadata.get_input_schema().input_names()
-#     input_df = input_df.rename(columns={old: new for old, new in zip(input_df.columns, model_expected_features)})
-#
-#     # Make a prediction
-#     prediction = model.predict(input_df)[0]
-#
-#     # Map prediction index to species name
-#     species_map = {0: 'setosa', 1: 'versicolor', 2: 'virginica'}
-#     predicted_species = species_map.get(prediction, "unknown")
-#
-#     return {"predicted_species": predicted_species}
-#
-# # Define a root endpoint for health checks
-# @app.get("/")
-# def read_root():
-#     return {"status": "ok", "message": "Welcome to the Iris Predictor API!"}
-
 import mlflow
 from mlflow.tracking import MlflowClient
 import pandas as pd
@@ -64,33 +15,30 @@ logging.basicConfig(
 )
 
 
-# --- MODEL LOADING LOGIC ---
-print("--- Attempting to load model ---")  # Add this line
+
+# --- DEFINITIVE MODEL LOADING LOGIC ---
 try:
+    print("--- Attempting to load model ---")
     mlflow.set_tracking_uri("file:./mlruns")
     client = MlflowClient()
     model_name = "iris-classifier"
 
     latest_versions = client.get_latest_versions(model_name, stages=["None"])
-    print(f"Found {len(latest_versions)} versions for model '{model_name}'.")  # Add this line
-
     prod_version = next((v for v in latest_versions if "prod" in v.aliases), None)
 
     if prod_version is None:
-        print("!!! No model version with alias 'prod' found.")  # Add this line
+        print("!!! No model version with alias 'prod' found.")
         raise ValueError("Production model version not found.")
 
-    print(f"Found prod version. Source: {prod_version.source}")  # Add this line
-    # The 'source' is an absolute path. We need to find the 'mlruns' part
-    # and use everything after it to make it a relative path for the container.
-    relative_path = "./" + "/".join(prod_version.source.split("/")[-4:])
-    print(f"Corrected relative path: {relative_path}")  # Debug print
-    model = mlflow.pyfunc.load_model(model_uri=relative_path)
-
-    print("--- Model loaded successfully ---")  # Add this line
+    # Use the 'runs:/' URI scheme with the model's associated run_id.
+    # This is the correct way to load a model artifact from a specific run.
+    model_uri = f"runs:/{prod_version.run_id}/model"
+    print(f"--- Loading model from URI: {model_uri} ---")
+    model = mlflow.pyfunc.load_model(model_uri)
+    print("--- Model loaded successfully ---")
 
 except Exception as e:
-    print(f"!!! An error occurred: {e}")  # Add this line
+    print(f"!!! An error occurred: {e}")
     model = None
 
 # --- END OF MODEL LOADING LOGIC ---
