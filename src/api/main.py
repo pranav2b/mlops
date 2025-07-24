@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 
+mlflow.set_tracking_uri("file:./mlruns")
 # Configure logging to write to a file in a 'logs' directory
 # Create a 'logs' directory in your project root for this to work
 logging.basicConfig(
@@ -17,29 +18,14 @@ logging.basicConfig(
 
 
 # --- DEFINITIVE MODEL LOADING LOGIC ---
+# --- SIMPLIFIED MODEL LOADING LOGIC ---
 try:
-    print("--- Attempting to load model ---")
-    mlflow.set_tracking_uri("file:./mlruns")
-    client = MlflowClient()
-    model_name = "iris-classifier"
-
-    latest_versions = client.get_latest_versions(model_name, stages=["None"])
-    prod_version = next((v for v in latest_versions if "prod" in v.aliases), None)
-
-    if prod_version is None:
-        print("!!! No model version with alias 'prod' found.")
-        raise ValueError("Production model version not found.")
-
-    # Use the 'runs:/' URI scheme with the model's associated run_id.
-    # This is the correct way to load a model artifact from a specific run.
-    model_uri = f"runs:/{prod_version.run_id}/model"
-    print(f"--- Loading model from URI: {model_uri} ---")
-    model = mlflow.pyfunc.load_model(model_uri)
-    print("--- Model loaded successfully ---")
-
+    model = mlflow.pyfunc.load_model("./outputs/model")
+    logging.info("Model loaded successfully from fixed path.")
 except Exception as e:
-    print(f"!!! An error occurred: {e}")
+    logging.error(f"Error loading model from fixed path: {e}")
     model = None
+# --- END OF SIMPLIFIED LOGIC ---
 
 # --- END OF MODEL LOADING LOGIC ---
 

@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the local source code and model artifacts to the container
 COPY ./src /app/src
 COPY ./mlruns /app/mlruns
+COPY ./outputs /app/outputs
 
 # Expose the port the app runs on
 EXPOSE 8000
