@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/abhilashbarbade/Pranav/mlops/mlruns/0/415b15b3264c4849b63480ed87b319e7/artifacts
+end_time: 1753344494399
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 415b15b3264c4849b63480ed87b319e7
+run_name: LogisticRegression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753344493057
+status: 3
+tags: []
+user_id: abhilashbarbade

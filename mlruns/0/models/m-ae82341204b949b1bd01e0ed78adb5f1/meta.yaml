@@ -1,0 +1,10 @@
+artifact_location: file:///Users/abhilashbarbade/Pranav/mlops/mlruns/0/models/m-ae82341204b949b1bd01e0ed78adb5f1/artifacts
+creation_timestamp: 1753344493080
+experiment_id: '0'
+last_updated_timestamp: 1753344494397
+model_id: m-ae82341204b949b1bd01e0ed78adb5f1
+model_type: null
+name: model
+source_run_id: 415b15b3264c4849b63480ed87b319e7
+status: 2
+status_message: null
