@@ -3,6 +3,7 @@ import mlflow
 import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
+from prometheus_fastapi_instrumentator import Instrumentator
 
 
 # --- START MODEL LOADING LOGIC ---
@@ -38,6 +39,9 @@ app = FastAPI(
     description="An API to predict Iris species using a trained ML model.",
     version="1.0"
 )
+
+# Add the instrumentator and expose the /metrics endpoint
+Instrumentator().instrument(app).expose(app)
 
 
 @app.post("/predict")
